@@ -50,15 +50,16 @@ export default function VoiceNotes() {
 
     let finalTranscript = ""
 
-    recognitionRef.current.onresult = (event) => {
-      let interimTranscript = ""
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+      //let interimTranscript = "" //removed
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
         if (event.results[i].isFinal) {
           finalTranscript += transcript + " "
-        } else {
-          interimTranscript += transcript
         }
+        //else {
+        //  interimTranscript += transcript
+        //} //removed
       }
     }
 
