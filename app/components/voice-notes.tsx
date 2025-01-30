@@ -17,7 +17,7 @@ export default function VoiceNotes() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const editInputRef = useRef<HTMLTextAreaElement>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -50,16 +50,12 @@ export default function VoiceNotes() {
 
     let finalTranscript = ""
 
-    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-      //let interimTranscript = "" //removed
+    recognitionRef.current.onresult = (event: any) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
         if (event.results[i].isFinal) {
           finalTranscript += transcript + " "
         }
-        //else {
-        //  interimTranscript += transcript
-        //} //removed
       }
     }
 
@@ -121,80 +117,90 @@ export default function VoiceNotes() {
   if (!mounted) return null
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-200"
-      >
-        {theme === "dark" ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-      </button>
-      <div className="flex flex-col items-center mb-8">
+    <div className="flex min-h-screen flex-col">
+      {/* Theme toggle */}
+      <div className="fixed top-4 left-4 z-50">
         <button
-          onClick={toggleListening}
-          className={`p-8 rounded-full ${
-            isListening ? "bg-red-500 animate-pulse" : "bg-blue-500 hover:bg-blue-600"
-          } transition-all duration-200 shadow-lg`}
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
-          <Mic className="w-12 h-12 text-white" />
+          {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
-        <div className="mt-4 text-center">
-          <p className="text-lg font-semibold">{isListening ? "Listening..." : "Tap to speak"}</p>
-          {isListening && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Tap to stop recording</p>}
-        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className={`p-4 rounded-lg shadow-md ${
-              theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-800"
-            } transition-colors duration-200`}
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center p-4">
+        {/* Voice input section */}
+        <div className="flex flex-col items-center justify-center min-h-[200px] w-full max-w-md mx-auto mb-8">
+          <button
+            onClick={toggleListening}
+            className={`relative p-6 rounded-full ${
+              isListening
+                ? "bg-red-500 animate-pulse"
+                : "bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200"
+            } transition-all duration-300`}
           >
-            {editingNoteId === note.id ? (
-              <textarea
-                ref={editInputRef}
-                className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent"
-                defaultValue={note.text}
-                onBlur={(e) => editNote(note.id, e.target.value)}
-              />
-            ) : (
-              <p>{note.text}</p>
-            )}
-            <div className="flex justify-end mt-2">
-              <button
-                onClick={() => startEditing(note.id)}
-                className="p-1 mr-2 rounded-full bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-              >
-                <Edit2 className="w-4 h-4 text-white" />
-              </button>
-              <button
-                onClick={() => deleteNote(note.id)}
-                className="p-1 rounded-full bg-pink-500 hover:bg-pink-600 transition-colors duration-200"
-              >
-                <Trash2 className="w-4 h-4 text-white" />
-              </button>
-            </div>
-            {isEditing && editingNoteId === note.id && (
-              <div className="mt-2 flex justify-center space-x-2">
+            <Mic className={`w-8 h-8 ${isListening ? "text-white" : "text-white dark:text-gray-900"}`} />
+          </button>
+          <p className="mt-4 text-lg font-medium">{isListening ? "Listening..." : "Tap to speak"}</p>
+        </div>
+
+        {/* Notes grid */}
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4">
+          {notes.map((note) => (
+            <div key={note.id} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 relative group">
+              {editingNoteId === note.id ? (
+                <textarea
+                  ref={editInputRef}
+                  className="w-full p-2 bg-white dark:bg-gray-700 rounded border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-0 transition-colors"
+                  defaultValue={note.text}
+                  onBlur={(e) => editNote(note.id, e.target.value)}
+                  rows={4}
+                />
+              ) : (
+                <p className="text-gray-900 dark:text-gray-100 mb-4">{note.text}</p>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-end gap-2">
                 <button
-                  onClick={() => handleEditChoice("voice", note.id)}
-                  className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+                  onClick={() => startEditing(note.id)}
+                  className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
-                  <Mic className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleEditChoice("text", note.id)}
-                  className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200"
+                  onClick={() => deleteNote(note.id)}
+                  className="p-1.5 rounded bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors"
                 >
-                  <Type className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Edit options */}
+              {isEditing && editingNoteId === note.id && (
+                <div className="absolute inset-x-0 -bottom-12 flex justify-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-b-lg shadow-lg">
+                  <button
+                    onClick={() => handleEditChoice("voice", note.id)}
+                    className="flex items-center gap-1 px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-sm"
+                  >
+                    <Mic className="w-3 h-3" />
+                    <span>Voice</span>
+                  </button>
+                  <button
+                    onClick={() => handleEditChoice("text", note.id)}
+                    className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 hover:bg-green-600 text-white text-sm"
+                  >
+                    <Type className="w-3 h-3" />
+                    <span>Text</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
-
 
